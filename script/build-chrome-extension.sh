@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # Chrome Web Store用のZIPファイルを作成するスクリプト
-# Slack Markdown Renderer Chrome Extension
 
 set -e  # エラーが発生したら即座に終了
 

@@ -97,14 +97,20 @@ if [ -n "$OUTPUT_DIR" ]; then
     fi
 fi
 
-# ImageMagickの存在確認
-if ! command -v convert &> /dev/null; then
-    print_error "ImageMagickのconvertコマンドが見つかりません。"
+# ImageMagickの存在確認（magick優先、convertフォールバック）
+MAGICK_CMD=""
+if command -v magick &> /dev/null; then
+    MAGICK_CMD="magick"
+elif command -v convert &> /dev/null; then
+    MAGICK_CMD="convert"
+else
+    print_error "ImageMagickが見つかりません。"
     print_info "インストール方法:"
     print_info "  macOS: brew install imagemagick"
     print_info "  Ubuntu: sudo apt-get install imagemagick"
     exit 1
 fi
+print_info "使用コマンド: $MAGICK_CMD"
 
 # 画像ファイルかどうかを判定する関数
 is_image_file() {
@@ -199,7 +205,7 @@ for INPUT_FILE in "${INPUT_FILES[@]}"; do
     fi
 
     # 元画像の情報を取得
-    ORIGINAL_INFO=$(identify "$INPUT_FILE" 2>/dev/null)
+    ORIGINAL_INFO=$(magick identify "$INPUT_FILE" 2>/dev/null || identify "$INPUT_FILE" 2>/dev/null)
     if [ $? -eq 0 ]; then
         ORIGINAL_SIZE=$(echo "$ORIGINAL_INFO" | awk '{print $3}')
         print_info "  元画像サイズ: $ORIGINAL_SIZE"
@@ -219,7 +225,7 @@ for INPUT_FILE in "${INPUT_FILES[@]}"; do
     fi
     
     # ImageMagickで画像をリサイズ
-    if convert "$INPUT_FILE" \
+    if $MAGICK_CMD "$INPUT_FILE" \
         -resize 1280x800 \
         -background transparent \
         -gravity center \
@@ -230,8 +236,8 @@ for INPUT_FILE in "${INPUT_FILES[@]}"; do
         ((SUCCESS_COUNT++))
         
         # 出力ファイルの情報を表示
-        if command -v identify &> /dev/null; then
-            OUTPUT_INFO=$(identify "$OUTPUT_FILE" 2>/dev/null)
+        if command -v magick &> /dev/null || command -v identify &> /dev/null; then
+            OUTPUT_INFO=$(magick identify "$OUTPUT_FILE" 2>/dev/null || identify "$OUTPUT_FILE" 2>/dev/null)
             if [ $? -eq 0 ]; then
                 FILE_SIZE=$(ls -lh "$OUTPUT_FILE" | awk '{print $5}')
                 print_info "  ファイルサイズ: $FILE_SIZE"
