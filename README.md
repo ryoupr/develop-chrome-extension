@@ -216,7 +216,7 @@ A: プロジェクトルートに`manifest.json`ファイルが必要です。Ch
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": ["https://example.com/*"],
       "js": ["content-script.js"],
       "css": ["styles.css"]
     }

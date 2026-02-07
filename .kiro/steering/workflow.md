@@ -12,7 +12,7 @@
 3. `manifest.json` を編集:
    - `name`: 拡張機能名
    - `description`: 説明文
-   - `matches`: 対象URL（`<all_urls>` or 特定ドメイン）
+   - `matches`: 対象URL（デフォルト: `https://example.com/*`。対象ドメインに変更すること）
    - `permissions`: 必要な権限
 
 ### Phase 2: 実装
