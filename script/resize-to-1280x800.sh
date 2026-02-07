@@ -239,12 +239,10 @@ for INPUT_FILE in "${INPUT_FILES[@]}"; do
         ((SUCCESS_COUNT++))
         
         # 出力ファイルの情報を表示
-        if command -v magick &> /dev/null || command -v identify &> /dev/null; then
-            OUTPUT_INFO=$($IDENTIFY_CMD "$OUTPUT_FILE" 2>/dev/null)
-            if [ $? -eq 0 ]; then
-                FILE_SIZE=$(ls -lh "$OUTPUT_FILE" | awk '{print $5}')
-                print_info "  ファイルサイズ: $FILE_SIZE"
-            fi
+        OUTPUT_INFO=$($IDENTIFY_CMD "$OUTPUT_FILE" 2>/dev/null)
+        if [ $? -eq 0 ]; then
+            FILE_SIZE=$(ls -lh "$OUTPUT_FILE" | awk '{print $5}')
+            print_info "  ファイルサイズ: $FILE_SIZE"
         fi
         
     else

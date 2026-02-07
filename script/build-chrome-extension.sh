@@ -58,16 +58,24 @@ print_info "必要なファイルをコピー中..."
 # 必須ファイル
 cp manifest.json "$TEMP_DIR/"
 
-# オプションファイル
-if [ -f "content-script.js" ]; then
-    cp content-script.js "$TEMP_DIR/"
-    print_info "✓ content-script.js をコピーしました"
-fi
+# manifest.jsonで参照されているファイルの存在チェック
+for JS_FILE in $(grep -o '"[^"]*\.js"' manifest.json | tr -d '"'); do
+    if [ -f "$JS_FILE" ]; then
+        cp "$JS_FILE" "$TEMP_DIR/"
+        print_info "✓ $JS_FILE をコピーしました"
+    else
+        print_warning "$JS_FILE がmanifest.jsonで参照されていますが、ファイルが存在しません"
+    fi
+done
 
-if [ -f "styles.css" ]; then
-    cp styles.css "$TEMP_DIR/"
-    print_info "✓ styles.css をコピーしました"
-fi
+for CSS_FILE in $(grep -o '"[^"]*\.css"' manifest.json | tr -d '"'); do
+    if [ -f "$CSS_FILE" ]; then
+        cp "$CSS_FILE" "$TEMP_DIR/"
+        print_info "✓ $CSS_FILE をコピーしました"
+    else
+        print_warning "$CSS_FILE がmanifest.jsonで参照されていますが、ファイルが存在しません"
+    fi
+done
 
 # ディレクトリをコピー
 if [ -d "icons" ]; then
