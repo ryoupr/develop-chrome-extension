@@ -99,10 +99,13 @@ fi
 
 # ImageMagickの存在確認（magick優先、convertフォールバック）
 MAGICK_CMD=""
+IDENTIFY_CMD=""
 if command -v magick &> /dev/null; then
     MAGICK_CMD="magick"
+    IDENTIFY_CMD="magick identify"
 elif command -v convert &> /dev/null; then
     MAGICK_CMD="convert"
+    IDENTIFY_CMD="identify"
 else
     print_error "ImageMagickが見つかりません。"
     print_info "インストール方法:"
@@ -205,7 +208,7 @@ for INPUT_FILE in "${INPUT_FILES[@]}"; do
     fi
 
     # 元画像の情報を取得
-    ORIGINAL_INFO=$(magick identify "$INPUT_FILE" 2>/dev/null || identify "$INPUT_FILE" 2>/dev/null)
+    ORIGINAL_INFO=$($IDENTIFY_CMD "$INPUT_FILE" 2>/dev/null)
     if [ $? -eq 0 ]; then
         ORIGINAL_SIZE=$(echo "$ORIGINAL_INFO" | awk '{print $3}')
         print_info "  元画像サイズ: $ORIGINAL_SIZE"
@@ -237,7 +240,7 @@ for INPUT_FILE in "${INPUT_FILES[@]}"; do
         
         # 出力ファイルの情報を表示
         if command -v magick &> /dev/null || command -v identify &> /dev/null; then
-            OUTPUT_INFO=$(magick identify "$OUTPUT_FILE" 2>/dev/null || identify "$OUTPUT_FILE" 2>/dev/null)
+            OUTPUT_INFO=$($IDENTIFY_CMD "$OUTPUT_FILE" 2>/dev/null)
             if [ $? -eq 0 ]; then
                 FILE_SIZE=$(ls -lh "$OUTPUT_FILE" | awk '{print $5}')
                 print_info "  ファイルサイズ: $FILE_SIZE"

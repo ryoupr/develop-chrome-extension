@@ -57,8 +57,17 @@ print_info "必要なファイルをコピー中..."
 
 # 必須ファイル
 cp manifest.json "$TEMP_DIR/"
-cp content-script.js "$TEMP_DIR/"
-cp styles.css "$TEMP_DIR/"
+
+# オプションファイル
+if [ -f "content-script.js" ]; then
+    cp content-script.js "$TEMP_DIR/"
+    print_info "✓ content-script.js をコピーしました"
+fi
+
+if [ -f "styles.css" ]; then
+    cp styles.css "$TEMP_DIR/"
+    print_info "✓ styles.css をコピーしました"
+fi
 
 # ディレクトリをコピー
 if [ -d "icons" ]; then
