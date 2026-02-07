@@ -47,11 +47,20 @@
 ## Agent向け指示
 
 ### 新規拡張機能の開発を依頼された場合
-1. ユーザーに「Use this template」でリポジトリ作成を依頼
-2. clone後、まず `manifest.json` の `name`, `description`, `matches` を要件に合わせて編集
-3. `content-script.js` と `styles.css` を実装
-4. 動作確認手順をユーザーに提示（chrome://extensions/ での読み込み方法）
-5. 完成後、ビルドコマンドを実行
+ユーザーが拡張機能の要件を伝えたら、以下を**確認を挟まず自律的に完了**まで進めること。
+
+1. `manifest.json` を要件に合わせて編集（`name`, `description`, `version`, `matches`, `permissions`）
+2. `content-script.js` を実装（要件のメインロジック）
+3. `styles.css` を実装（必要なスタイル）
+4. 外部ライブラリが必要な場合は `lib/` に配置し、`manifest.json` に追加
+5. 実装完了後、`chrome://extensions/` での動作確認手順をユーザーに提示
+6. ユーザーがアイコン画像を提供したら `./script/generate-icons.sh` を実行
+7. `./script/build-chrome-extension.sh` でZIPを作成
+
+### 自律実行の判断基準
+- **確認不要**: manifest.json編集、コード実装、スタイル実装 → そのまま進める
+- **ユーザー待ち**: アイコン画像の提供、Chrome Web Storeへのアップロード → ユーザーに依頼
+- **確認必要**: 要件が曖昧で複数の解釈がある場合のみ → 最小限の質問で確認
 
 ### コード規約
 - `content-script.js`: 即時実行関数で囲み、グローバル汚染を防ぐ
