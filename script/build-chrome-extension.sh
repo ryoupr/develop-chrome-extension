@@ -61,7 +61,8 @@ cp manifest.json "$TEMP_DIR/"
 # manifest.jsonで参照されているファイルの存在チェック
 for JS_FILE in $(grep -o '"[^"]*\.js"' manifest.json | tr -d '"'); do
     if [ -f "$JS_FILE" ]; then
-        cp "$JS_FILE" "$TEMP_DIR/"
+        mkdir -p "$TEMP_DIR/$(dirname "$JS_FILE")"
+        cp "$JS_FILE" "$TEMP_DIR/$JS_FILE"
         print_info "✓ $JS_FILE をコピーしました"
     else
         print_warning "$JS_FILE がmanifest.jsonで参照されていますが、ファイルが存在しません"
@@ -70,7 +71,8 @@ done
 
 for CSS_FILE in $(grep -o '"[^"]*\.css"' manifest.json | tr -d '"'); do
     if [ -f "$CSS_FILE" ]; then
-        cp "$CSS_FILE" "$TEMP_DIR/"
+        mkdir -p "$TEMP_DIR/$(dirname "$CSS_FILE")"
+        cp "$CSS_FILE" "$TEMP_DIR/$CSS_FILE"
         print_info "✓ $CSS_FILE をコピーしました"
     else
         print_warning "$CSS_FILE がmanifest.jsonで参照されていますが、ファイルが存在しません"

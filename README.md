@@ -13,6 +13,13 @@ git clone https://github.com/<your-username>/<your-repo-name>.git
 cd <your-repo-name>
 ```
 
+4. 以下を編集して開発開始:
+   - [ ] `manifest.json` の `name`, `description` を変更
+   - [ ] `manifest.json` の `matches` を対象URLに変更
+   - [ ] `manifest.json` の `permissions` を必要に応じて追加
+   - [ ] `content-script.js` にメインロジックを実装
+   - [ ] `styles.css` にスタイルを実装
+
 ## 🚀 主な機能
 
 - **アイコン自動生成**: 1つの画像から複数サイズのアイコンを自動生成
@@ -25,7 +32,6 @@ cd <your-repo-name>
 ### 必須
 - **macOS** (推奨)
 - **Bash** シェル
-- **Node.js** (Chrome拡張機能開発用)
 
 ### 依存ツール
 - **sips**: macOS標準のコマンドラインツール (アイコン生成用)
@@ -118,9 +124,9 @@ Chrome Web Store用のスクリーンショット画像を1280x800サイズに�
 .
 ├── README.md                    # プロジェクト概要
 ├── .gitignore                   # Git除外設定
-├── manifest.json                # Chrome拡張機能設定（作成予定）
-├── content-script.js            # コンテンツスクリプト（作成予定）
-├── styles.css                   # スタイルシート（作成予定）
+├── manifest.json                # Chrome拡張機能設定（編集して使用）
+├── content-script.js            # コンテンツスクリプト（編集して使用）
+├── styles.css                   # スタイルシート（編集して使用）
 ├── icons/                       # アイコンファイル格納
 │   └── .gitkeep
 ├── screenshot/                  # スクリーンショット格納

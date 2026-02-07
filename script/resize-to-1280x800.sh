@@ -215,7 +215,7 @@ for INPUT_FILE in "${INPUT_FILES[@]}"; do
         
         # サイズを分解
         ORIGINAL_WIDTH=$(echo "$ORIGINAL_SIZE" | cut -d'x' -f1)
-        ORIGINAL_HEIGHT=$(echo "$ORIGINAL_SIZE" | cut -d'x' -f2)
+        ORIGINAL_HEIGHT=$(echo "$ORIGINAL_SIZE" | cut -d'x' -f2 | cut -d'+' -f1)
         
         # 元画像と目標サイズの比較
         if [ "$ORIGINAL_WIDTH" -gt 1280 ] || [ "$ORIGINAL_HEIGHT" -gt 800 ]; then
