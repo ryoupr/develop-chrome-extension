@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # Chrome Web Store用のZIPファイルを作成するスクリプト
-# Slack Markdown Renderer Chrome Extension
 
 set -e  # エラーが発生したら即座に終了
 
@@ -58,8 +57,27 @@ print_info "必要なファイルをコピー中..."
 
 # 必須ファイル
 cp manifest.json "$TEMP_DIR/"
-cp content-script.js "$TEMP_DIR/"
-cp styles.css "$TEMP_DIR/"
+
+# manifest.jsonで参照されているファイルの存在チェック
+for JS_FILE in $(grep -o '"[^"]*\.js"' manifest.json | tr -d '"'); do
+    if [ -f "$JS_FILE" ]; then
+        mkdir -p "$TEMP_DIR/$(dirname "$JS_FILE")"
+        cp "$JS_FILE" "$TEMP_DIR/$JS_FILE"
+        print_info "✓ $JS_FILE をコピーしました"
+    else
+        print_warning "$JS_FILE がmanifest.jsonで参照されていますが、ファイルが存在しません"
+    fi
+done
+
+for CSS_FILE in $(grep -o '"[^"]*\.css"' manifest.json | tr -d '"'); do
+    if [ -f "$CSS_FILE" ]; then
+        mkdir -p "$TEMP_DIR/$(dirname "$CSS_FILE")"
+        cp "$CSS_FILE" "$TEMP_DIR/$CSS_FILE"
+        print_info "✓ $CSS_FILE をコピーしました"
+    else
+        print_warning "$CSS_FILE がmanifest.jsonで参照されていますが、ファイルが存在しません"
+    fi
+done
 
 # ディレクトリをコピー
 if [ -d "icons" ]; then
