@@ -3,7 +3,6 @@
 ## 開発環境
 - **OS**: macOS（推奨）
 - **Shell**: Bash
-- **Node.js**: Chrome拡張機能開発用
 
 ## 依存ツール
 - **sips**: macOS標準のコマンドラインツール（アイコン生成用）
