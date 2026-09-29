@@ -24,8 +24,5 @@ web-ext.config.ts
 .DS_Store
 Thumbs.db
 
-# Temporary files
-temp-chrome-extension/
-
 # Environment variables
 .env
