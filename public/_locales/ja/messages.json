@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "My Extension",
+    "description": "拡張機能名（Chrome Web Store・chrome://extensions に表示）"
+  },
+  "extDescription": {
+    "message": "Chrome拡張機能の説明",
+    "description": "拡張機能の説明（132文字以内）"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "My Extension",
+    "description": "Extension name shown in the Chrome Web Store and chrome://extensions"
+  },
+  "extDescription": {
+    "message": "Description of the Chrome extension",
+    "description": "Extension description (max 132 characters)"
+  }
+}

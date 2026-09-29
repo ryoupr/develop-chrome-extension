@@ -1,0 +1,63 @@
+name: Release
+
+# v* タグの push で ZIP を作成して GitHub Release に添付し、
+# Secret「WXT_SUBMIT_ENV」が設定されていれば Chrome Web Store の審査に提出する。
+# 手動実行（workflow_dispatch）はデフォルトで dry-run（認証確認のみ）。
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Chrome Web Store への提出を dry-run にする（認証確認のみ）'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run check
+
+      - name: Verify tag matches package.json version
+        if: github.event_name == 'push'
+        run: |
+          VERSION="v$(node -p 'require("./package.json").version')"
+          if [ "$VERSION" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::タグ $GITHUB_REF_NAME と package.json の version ($VERSION) が一致しません"
+            exit 1
+          fi
+
+      - run: npm run zip
+
+      - name: Create GitHub Release
+        if: github.event_name == 'push'
+        run: gh release create "$GITHUB_REF_NAME" .output/*-chrome.zip --verify-tag --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Check Chrome Web Store secret
+        id: cws
+        run: echo "enabled=${{ secrets.WXT_SUBMIT_ENV != '' }}" >> "$GITHUB_OUTPUT"
+
+      # WXT_SUBMIT_ENV は npm run setup:publish で登録した .env.submit の中身
+      - name: Submit to Chrome Web Store
+        if: steps.cws.outputs.enabled == 'true'
+        run: |
+          printf '%s\n' "$WXT_SUBMIT_ENV" > .env.submit
+          npx wxt submit --chrome-zip .output/*-chrome.zip ${DRY_RUN_FLAG}
+        env:
+          WXT_SUBMIT_ENV: ${{ secrets.WXT_SUBMIT_ENV }}
+          DRY_RUN_FLAG: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry-run) && '--dry-run' || '' }}

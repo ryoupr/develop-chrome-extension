@@ -8,14 +8,25 @@
     "node": ">=22"
   },
   "scripts": {
+    "setup": "node script/setup.mjs",
+    "setup:publish": "node script/setup-publish.mjs",
     "dev": "wxt",
     "build": "wxt build",
     "zip": "wxt zip",
+    "submit": "wxt submit",
     "compile": "tsc --noEmit",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "npm run lint && npm run compile && npm run test",
     "postinstall": "wxt prepare"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.5.14",
     "typescript": "^5.9.3",
+    "vitest": "^5.0.2",
     "wxt": "^0.21.4"
-  }
+  },
+  "packageManager": "npm@11.19.0"
 }
