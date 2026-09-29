@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npx biome ci .
+
+      - name: Type check
+        run: npm run compile
+
+      - name: Test
+        run: npm run test
+
+      - name: Build & zip
+        run: npm run zip
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: chrome-extension
+          path: .output/*-chrome.zip
+          if-no-files-found: error

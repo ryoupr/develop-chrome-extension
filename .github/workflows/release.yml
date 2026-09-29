@@ -1,0 +1,64 @@
+name: Release
+
+# v* タグの push で ZIP を作成して GitHub Release に添付し、
+# Chrome Web Store のシークレットが設定されていれば審査に提出する。
+# 手動実行（workflow_dispatch）はデフォルトで dry-run（認証確認のみ）。
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Chrome Web Store への提出を dry-run にする（認証確認のみ）'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run check
+
+      - name: Verify tag matches package.json version
+        if: github.event_name == 'push'
+        run: |
+          VERSION="v$(node -p 'require("./package.json").version')"
+          if [ "$VERSION" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::タグ $GITHUB_REF_NAME と package.json の version ($VERSION) が一致しません"
+            exit 1
+          fi
+
+      - run: npm run zip
+
+      - name: Create GitHub Release
+        if: github.event_name == 'push'
+        run: gh release create "$GITHUB_REF_NAME" .output/*-chrome.zip --verify-tag --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Check Chrome Web Store secrets
+        id: cws
+        run: echo "enabled=${{ secrets.CHROME_EXTENSION_ID != '' }}" >> "$GITHUB_OUTPUT"
+
+      - name: Submit to Chrome Web Store
+        if: steps.cws.outputs.enabled == 'true'
+        run: npx wxt submit --chrome-zip .output/*-chrome.zip ${DRY_RUN:+--dry-run}
+        env:
+          DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry-run) && 'true' || '' }}
+          CHROME_API_VERSION: v2
+          CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+          CHROME_PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
+          CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL: ${{ secrets.CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL }}
+          CHROME_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.CHROME_SERVICE_ACCOUNT_PRIVATE_KEY }}
