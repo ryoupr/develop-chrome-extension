@@ -12,11 +12,12 @@
 1. GitHubで「Use this template」→ 新リポジトリ作成（命名: 拡張機能の機能を表す名前）
 2. `git clone` してローカルに取得し、`npm install`（`postinstall` で `wxt prepare` が走り型定義が生成される）
    - Node.js のバージョンは `.node-version` を参照（fnm / mise / nodenv 等で自動切り替え可）
-3. 拡張機能の基本情報を編集:
-   - `public/_locales/{ja,en}/messages.json`: `extName`（表示名）, `extDescription`（説明、132文字以内）
-   - `package.json`: `name`（ZIP名に使用。kebab-case）, `version`
-   - `wxt.config.ts` の `manifest`: `permissions`, `host_permissions` 等（`default_locale` は `ja`）
-   - `entrypoints/content/index.ts` の `matches`: 対象URL（デフォルト: `https://example.com/*`。対象ドメインに変更すること）
+3. `npm run setup` で基本情報を設定（対話形式。引数指定も可: `npm run setup -- --help`）。以下が書き換わる:
+   - `public/_locales/{ja,en}/messages.json`: `extName`（表示名、75文字以内）, `extDescription`（説明、132文字以内）
+   - `package.json`: `name`（ZIP名に使用。kebab-case）, `description`
+   - `entrypoints/content/index.ts` の `matches`: 対象URL
+   - `utils/class-name.ts` の `CLASS_PREFIX`: CSSクラス名のプレフィックス
+4. `wxt.config.ts` の `manifest` に `permissions`, `host_permissions` 等を追加（`default_locale` は `ja`）
 
 ### Phase 2: 実装
 1. `entrypoints/content/index.ts` の `main()` にメインロジックを実装
@@ -52,11 +53,12 @@ npm run zip
 - 生成されたZIPを Chrome Web Store Developer Dashboard にアップロード
 - URL: https://chrome.google.com/webstore/devconsole/
 
-2回目以降の自動提出を使う場合は、GitHub リポジトリの Secrets に以下を登録する（未登録なら提出ステップはスキップされる）:
-- `CHROME_EXTENSION_ID`, `CHROME_PUBLISHER_ID`
-- `CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL`, `CHROME_SERVICE_ACCOUNT_PRIVATE_KEY`
-- 取得方法: `npx wxt submit init` の案内、または https://wxt.dev/guide/essentials/publishing.html
-- 登録後、Actions の「Release」を手動実行（デフォルトは dry-run）して認証を確認する
+2回目以降の自動提出を使う場合は、初回公開後に `npm run setup:publish` を実行する:
+1. `wxt submit init` で `.env.submit` を作成（ストアは Chrome Web Store、API は v2 を選択）
+2. `wxt submit --dry-run` で認証を確認
+3. `.env.submit` の内容を GitHub Secret `WXT_SUBMIT_ENV` に登録（`gh` が必要。ない場合は手動登録の手順が表示される）
+- Secret が未登録なら Release ワークフローの提出ステップはスキップされる
+- 登録後、Actions の「Release」を手動実行（デフォルトは dry-run）して CI からの認証を確認する
 
 ### Phase 5: バージョンアップ
 1. 変更を実装し、`npm run check` を通す
@@ -65,7 +67,7 @@ npm run zip
 4. Release ワークフローが自動で実行される:
    - `npm run check` → タグと `package.json` の version の一致確認 → ZIP 作成
    - GitHub Release を作成して ZIP を添付
-   - Secrets が設定されていれば Chrome Web Store に提出
+   - Secret `WXT_SUBMIT_ENV` が設定されていれば Chrome Web Store に提出
 5. 自動提出を使わない場合は、GitHub Release の ZIP を Developer Dashboard にアップロード
 
 ### CI・依存関係の更新
@@ -78,20 +80,21 @@ npm run zip
 ユーザーが拡張機能の要件を伝えたら、以下を**確認を挟まず自律的に完了**まで進めること。
 
 1. `npm install`（未実行の場合。Claude Code on the web ではセッション開始フックで自動実行される）
-2. `public/_locales/{ja,en}/messages.json`（表示名・説明）、`package.json`（`name`, `version`）、`wxt.config.ts`（`permissions` 等）を要件に合わせて編集
-3. `entrypoints/content/index.ts` を実装（`matches` と要件のメインロジック）
-4. `entrypoints/content/style.css` を実装（必要なスタイル）
-5. background / popup 等が必要なら `entrypoints/` に追加
-6. 外部ライブラリが必要な場合は `npm install` で追加
-7. 分岐や変換などのロジックは `utils/` に切り出してテストを書く
-8. `npm run check` と `npm run build` が通ることを確認（lint エラーは `npm run lint:fix` で整形してから直す）
-9. 実装完了後、動作確認手順（`npm run dev`、または `.output/chrome-mv3/` の読み込み）をユーザーに提示
-10. ユーザーがアイコン画像を提供したら `./script/generate-icons.sh` を実行
-11. `npm run zip` でZIPを作成
+2. `npm run setup -- --yes --name "<日本語名>" --name-en "<英語名>" --description "<説明>" --description-en "<英語の説明>" --matches "<対象URL>"` で基本情報を設定（パッケージ名とプレフィックスは英語名から自動生成。`--package` / `--prefix` で指定も可）
+3. `wxt.config.ts` に必要な `permissions` 等を追加
+4. `entrypoints/content/index.ts` に要件のメインロジックを実装
+5. `entrypoints/content/style.css` を実装（必要なスタイル）
+6. background / popup 等が必要なら `entrypoints/` に追加
+7. 外部ライブラリが必要な場合は `npm install` で追加
+8. 分岐や変換などのロジックは `utils/` に切り出してテストを書く
+9. `npm run check` と `npm run build` が通ることを確認（lint エラーは `npm run lint:fix` で整形してから直す）
+10. 実装完了後、動作確認手順（`npm run dev`、または `.output/chrome-mv3/` の読み込み）をユーザーに提示
+11. ユーザーがアイコン画像を提供したら `./script/generate-icons.sh` を実行
+12. `npm run zip` でZIPを作成
 
 ### 自律実行の判断基準
-- **確認不要**: messages.json / package.json / wxt.config.ts 編集、コード実装、スタイル実装、テスト追加、npm パッケージ追加 → そのまま進める
-- **ユーザー待ち**: アイコン画像の提供、Chrome Web Storeへの初回アップロード、GitHub Secrets の登録 → ユーザーに依頼。アイコンが未提供の場合は https://ryoupr.github.io/home/tools/icon-generator で簡易作成できることを案内する
+- **確認不要**: `npm run setup` の実行、messages.json / package.json / wxt.config.ts 編集、コード実装、スタイル実装、テスト追加、npm パッケージ追加 → そのまま進める
+- **ユーザー待ち**: アイコン画像の提供、Chrome Web Storeへの初回アップロード、`npm run setup:publish`（認証情報の入力が必要） → ユーザーに依頼。アイコンが未提供の場合は https://ryoupr.github.io/home/tools/icon-generator で簡易作成できることを案内する
 - **確認必要**: 要件が曖昧で複数の解釈がある場合、リリース用タグの push → 最小限の質問で確認
 
 ### サブエージェントの活用

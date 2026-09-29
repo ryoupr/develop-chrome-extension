@@ -25,9 +25,12 @@
 │   │   └── en/messages.json
 │   └── icon/                    # アイコン（{16,32,48,128}.png を自動検出）
 ├── screenshot/                  # スクリーンショット格納
-├── script/                      # アセット用スクリプト（ImageMagick）
-│   ├── generate-icons.sh
-│   └── resize-to-1280x800.sh
+├── script/                      # セットアップ・アセット用スクリプト
+│   ├── setup.mjs                # npm run setup（初期設定）
+│   ├── setup-publish.mjs        # npm run setup:publish（自動提出の設定）
+│   ├── *.test.mjs               # セットアップスクリプトのテスト
+│   ├── generate-icons.sh        # アイコン生成（ImageMagick）
+│   └── resize-to-1280x800.sh    # スクリーンショットのリサイズ（ImageMagick）
 ├── .github/
 │   ├── workflows/
 │   │   ├── ci.yml               # PR / main push: lint・型チェック・テスト・ZIP
@@ -42,7 +45,7 @@
 - `.wxt/` - `wxt prepare` が生成する型定義・tsconfig
 - `.output/chrome-mv3/` - ビルド結果（`chrome://extensions/` で読み込むディレクトリ）
 - `node_modules/`
-- `.env.submit` - `wxt submit init` で作成される提出用シークレット
+- `.env.submit` - `npm run setup:publish`（`wxt submit init`）で作成される提出用シークレット
 
 ## ファイル命名規則
 

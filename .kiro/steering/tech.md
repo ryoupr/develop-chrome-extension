@@ -15,7 +15,7 @@
 ## 品質管理
 - **[Biome](https://biomejs.dev/)**: lint とフォーマット（`biome.json`）
 - **[Vitest](https://vitest.dev/)**: ユニットテスト。`WxtVitest` プラグインで `browser` API が in-memory 実装（fakeBrowser）に置き換わる
-- **GitHub Actions**: CI（`ci.yml`）とリリース（`release.yml`）
+- **GitHub Actions**: CI（`ci.yml`）とリリース（`release.yml`）。自動提出は Secret `WXT_SUBMIT_ENV`（`.env.submit` の中身）を使用
 - **Dependabot**: npm / GitHub Actions の更新を毎週提案
 
 ## 依存ツール（アセット用）
@@ -24,6 +24,8 @@
 ## 主要コマンド
 ```bash
 npm install          # 依存関係インストール（wxt prepare も実行される）
+npm run setup        # 初期設定（拡張機能名・説明・対象URL・CSSプレフィックス）
+npm run setup:publish # Chrome Web Store 自動提出のセットアップ（初回公開後）
 npm run dev          # 開発サーバー起動（Chrome自動起動・ホットリロード）
 npm run check        # lint + 型チェック + テスト
 npm run lint         # Biome チェック

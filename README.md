@@ -12,22 +12,25 @@
 git clone https://github.com/<your-username>/<your-repo-name>.git
 cd <your-repo-name>
 npm install
+npm run setup   # 拡張機能名・説明・対象URLなどを対話形式で設定
 npm run dev
 ```
 
-4. 以下を編集して開発開始:
-   - [ ] `public/_locales/{ja,en}/messages.json` の `extName`（表示名）と `extDescription`（説明）を変更
-   - [ ] `package.json` の `name` を変更（ZIPのファイル名に使われます）
+4. `npm run setup` は以下をまとめて書き換えます（引数でも指定できます。`npm run setup -- --help` 参照）:
+   - `public/_locales/{ja,en}/messages.json` の拡張機能名・説明
+   - `package.json` の `name`（ZIPのファイル名）
+   - `entrypoints/content/index.ts` の `matches`（対象URL）
+   - `utils/class-name.ts` の `CLASS_PREFIX`（CSSクラス名のプレフィックス）
+5. 続けて開発:
    - [ ] `wxt.config.ts` に必要な `permissions` を追加
-   - [ ] `entrypoints/content/index.ts` の `matches` を対象URLに変更
    - [ ] `entrypoints/content/index.ts` にメインロジックを実装
    - [ ] `entrypoints/content/style.css` にスタイルを実装
-   - [ ] `utils/class-name.ts` の `CLASS_PREFIX` を拡張機能固有の値に変更
 
 ## 🚀 主な機能
 
 - **WXT**: TypeScript、ホットリロード、エントリーポイントからの manifest 自動生成
 - **品質管理**: Biome（lint / format）、Vitest（ユニットテスト）
+- **セットアップスクリプト**: `npm run setup`（初期設定）と `npm run setup:publish`（自動提出の設定）
 - **CI / リリース**: プルリクエストごとの自動チェック、タグ push で GitHub Release 作成と Chrome Web Store 提出
 - **依存関係の自動更新**: Dependabot が npm と GitHub Actions の更新を提案
 - **多言語対応**: 日本語 / 英語の `_locales` 雛形
@@ -58,6 +61,8 @@ sudo apt-get install imagemagick
 
 | コマンド | 内容 |
 |---|---|
+| `npm run setup` | 拡張機能名・説明・対象URLなどの初期設定 |
+| `npm run setup:publish` | Chrome Web Store への自動提出をセットアップ（初回公開後） |
 | `npm run dev` | 拡張機能を読み込んだ Chrome を起動し、変更をホットリロード |
 | `npm run check` | lint + 型チェック + テストをまとめて実行 |
 | `npm run lint` / `npm run lint:fix` | Biome でチェック / 整形・自動修正 |
@@ -173,7 +178,7 @@ npm install
 
 ### 2. 拡張機能の開発
 ```bash
-# 1. messages.json / package.json / wxt.config.ts を編集
+# 1. npm run setup で初期設定し、wxt.config.ts に permissions を追加
 # 2. entrypoints/content/index.ts, style.css を実装
 # 3. 開発サーバーで動作確認（Chromeが起動し、変更がホットリロードされる）
 npm run dev
@@ -207,7 +212,7 @@ npm version patch          # package.json の version を上げて v* タグを�
 git push --follow-tags     # タグを push すると Release ワークフローが実行される
 ```
 
-Release ワークフローは `npm run check` → ZIP 作成 → GitHub Release 作成（ZIP添付）を行い、Chrome Web Store の Secrets が登録されていれば審査に提出します。
+Release ワークフローは `npm run check` → ZIP 作成 → GitHub Release 作成（ZIP添付）を行い、自動提出を設定済みなら Chrome Web Store の審査に提出します。
 
 ## 🤖 GitHub Actions
 
@@ -218,16 +223,21 @@ Release ワークフローは `npm run check` → ZIP 作成 → GitHub Release 
 
 ### Chrome Web Store への自動提出
 
-リポジトリの **Settings → Secrets and variables → Actions** に以下を登録すると、Release ワークフローが Chrome Web Store API v2 で提出します。未登録の場合、提出ステップはスキップされます。
+ストアに初めて公開したあと（拡張機能IDが発行されたあと）に、次のコマンドを1回実行します。
 
-| Secret | 内容 |
-|---|---|
-| `CHROME_EXTENSION_ID` | 拡張機能のID |
-| `CHROME_PUBLISHER_ID` | パブリッシャーID |
-| `CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL` | サービスアカウントのメールアドレス |
-| `CHROME_SERVICE_ACCOUNT_PRIVATE_KEY` | サービスアカウントの秘密鍵 |
+```bash
+npm run setup:publish
+```
 
-値の取得方法は `npx wxt submit init` の案内、または [WXT の公開ガイド](https://wxt.dev/guide/essentials/publishing.html) を参照してください。登録後は Actions タブから「Release」を手動実行すると（デフォルトは dry-run）、実際に提出せずに認証を確認できます。
+1. `wxt submit init` で認証情報を対話形式で入力し、`.env.submit` を作成します（Git 管理外）
+   - ストアは「Chrome Web Store」、API は「v2」を選択
+   - 必要な値: 拡張機能ID、パブリッシャーID、サービスアカウントの `client_email` と `private_key`（[作成手順](https://developer.chrome.com/docs/webstore/service-accounts)）
+2. `wxt submit --dry-run` で認証が通るか確認します
+3. [GitHub CLI](https://cli.github.com/)（`gh`）で `.env.submit` の内容を Secret `WXT_SUBMIT_ENV` に登録します
+
+`gh` がない場合は、表示される手順に従って手動で登録してください（`.env.submit` の中身をそのまま `WXT_SUBMIT_ENV` として登録）。Secret が未登録の場合、Release ワークフローの提出ステップはスキップされます。
+
+登録後は Actions タブから「Release」を手動実行すると（デフォルトは dry-run）、CI からも認証できるか確認できます。
 
 ## 🔧 トラブルシューティング
 
@@ -241,6 +251,9 @@ A: `.wxt/` の型定義が未生成です。`npm install`（または `npx wxt p
 
 **Q: `npm run dev` でブラウザが起動しない**
 A: Chrome が見つからない環境では、`npm run build` 後に `.output/chrome-mv3/` を手動で読み込んでください。Chrome のパス指定などは [WXT のドキュメント](https://wxt.dev/guide/essentials/config/browser-startup.html) を参照してください。
+
+**Q: `npm run setup:publish` で認証に失敗する**
+A: `.env.submit` の値を確認してください。`private_key` は JSON の値から前後の引用符を除き、`\n` をそのまま貼り付けます。`npm run setup:publish` を再実行すると、前回の値を初期値として入力し直せます。
 
 **Q: Release ワークフローが「タグと package.json の version が一致しません」で失敗する**
 A: タグは `npm version` で作成してください。手動でタグを作る場合は `package.json` の `version` と同じ値（例: `v1.2.3`）にします。

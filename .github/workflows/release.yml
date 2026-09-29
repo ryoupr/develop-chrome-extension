@@ -1,7 +1,7 @@
 name: Release
 
 # v* タグの push で ZIP を作成して GitHub Release に添付し、
-# Chrome Web Store のシークレットが設定されていれば審査に提出する。
+# Secret「WXT_SUBMIT_ENV」が設定されていれば Chrome Web Store の審査に提出する。
 # 手動実行（workflow_dispatch）はデフォルトで dry-run（認証確認のみ）。
 on:
   push:
@@ -48,17 +48,16 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
 
-      - name: Check Chrome Web Store secrets
+      - name: Check Chrome Web Store secret
         id: cws
-        run: echo "enabled=${{ secrets.CHROME_EXTENSION_ID != '' }}" >> "$GITHUB_OUTPUT"
+        run: echo "enabled=${{ secrets.WXT_SUBMIT_ENV != '' }}" >> "$GITHUB_OUTPUT"
 
+      # WXT_SUBMIT_ENV は npm run setup:publish で登録した .env.submit の中身
       - name: Submit to Chrome Web Store
         if: steps.cws.outputs.enabled == 'true'
-        run: npx wxt submit --chrome-zip .output/*-chrome.zip ${DRY_RUN:+--dry-run}
+        run: |
+          printf '%s\n' "$WXT_SUBMIT_ENV" > .env.submit
+          npx wxt submit --chrome-zip .output/*-chrome.zip ${DRY_RUN_FLAG}
         env:
-          DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry-run) && 'true' || '' }}
-          CHROME_API_VERSION: v2
-          CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
-          CHROME_PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
-          CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL: ${{ secrets.CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL }}
-          CHROME_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.CHROME_SERVICE_ACCOUNT_PRIVATE_KEY }}
+          WXT_SUBMIT_ENV: ${{ secrets.WXT_SUBMIT_ENV }}
+          DRY_RUN_FLAG: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry-run) && '--dry-run' || '' }}

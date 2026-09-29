@@ -8,6 +8,8 @@
     "node": ">=22"
   },
   "scripts": {
+    "setup": "node script/setup.mjs",
+    "setup:publish": "node script/setup-publish.mjs",
     "dev": "wxt",
     "build": "wxt build",
     "zip": "wxt zip",
