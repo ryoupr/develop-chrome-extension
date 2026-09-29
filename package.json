@@ -1,0 +1,21 @@
+{
+  "name": "my-extension",
+  "description": "Chrome拡張機能の説明",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "wxt",
+    "build": "wxt build",
+    "zip": "wxt zip",
+    "compile": "tsc --noEmit",
+    "postinstall": "wxt prepare"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "wxt": "^0.21.4"
+  }
+}

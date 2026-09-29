@@ -1,6 +1,6 @@
 # Chrome拡張機能開発ツールキット
 
-Chrome拡張機能の開発を効率化するためのテンプレート・ツールキットです。アイコン生成からパッケージングまで、開発からリリースまでの一貫したワークフローを提供します。
+[WXT](https://wxt.dev/) をベースにした Chrome拡張機能の開発テンプレート・ツールキットです。TypeScript・ホットリロード・manifest 自動生成に加え、アイコン生成からパッケージングまで、開発からリリースまでの一貫したワークフローを提供します。
 
 ## 📦 このテンプレートの使い方
 
@@ -11,34 +11,35 @@ Chrome拡張機能の開発を効率化するためのテンプレート・ツ�
 ```bash
 git clone https://github.com/<your-username>/<your-repo-name>.git
 cd <your-repo-name>
+npm install
+npm run dev
 ```
 
 4. 以下を編集して開発開始:
-   - [ ] `manifest.json` の `name`, `description` を変更
-   - [ ] `manifest.json` の `matches` を対象URLに変更
-   - [ ] `manifest.json` の `permissions` を必要に応じて追加
-   - [ ] `content-script.js` にメインロジックを実装
-   - [ ] `styles.css` にスタイルを実装
+   - [ ] `package.json` の `name`, `description` を変更
+   - [ ] `wxt.config.ts` の `manifest.name` を変更し、必要に応じて `permissions` を追加
+   - [ ] `entrypoints/content/index.ts` の `matches` を対象URLに変更
+   - [ ] `entrypoints/content/index.ts` にメインロジックを実装
+   - [ ] `entrypoints/content/style.css` にスタイルを実装
 
 ## 🚀 主な機能
 
+- **WXT**: TypeScript、ホットリロード、エントリーポイントからの manifest 自動生成
+- **パッケージング**: `npm run zip` で Chrome Web Store 用ZIPを作成
 - **アイコン自動生成**: 1つの画像から複数サイズのアイコンを自動生成
-- **パッケージング自動化**: Chrome Web Store用のZIPファイルを自動作成
 - **画像リサイズツール**: スクリーンショット用画像の自動調整
 - **日本語ドキュメント**: 完全日本語対応のドキュメントとツール
 
 ## 📋 必要な環境
 
 ### 必須
+- **Node.js 22 以上**
+
+### アセット用スクリプト
 - **macOS** (推奨)
-- **Bash** シェル
-
-### 依存ツール
 - **sips**: macOS標準のコマンドラインツール (アイコン生成用)
-- **ImageMagick**: 画像処理ライブラリ
-- **zip**: アーカイブ作成 (標準搭載)
+- **ImageMagick**: 画像処理ライブラリ (スクリーンショットのリサイズ用)
 
-### ImageMagickのインストール
 ```bash
 # Homebrewを使用
 brew install imagemagick
@@ -46,25 +47,30 @@ brew install imagemagick
 
 ## 🛠️ 使用方法
 
+### npm スクリプト
+
+| コマンド | 内容 |
+|---|---|
+| `npm run dev` | 拡張機能を読み込んだ Chrome を起動し、変更をホットリロード |
+| `npm run build` | `.output/chrome-mv3/` に本番ビルド |
+| `npm run zip` | Chrome Web Store 用ZIPを `.output/` に作成 |
+| `npm run compile` | TypeScript の型チェック |
+
 ### 1. アイコン生成
 
 1つの画像から Chrome拡張機能に必要な全サイズのアイコンを自動生成します。
 
 ```bash
-# 基本的な使用方法
 ./script/generate-icons.sh source-icon.png
-
-# 使用例
-./script/generate-icons.sh my-extension-icon.png
 ```
 
 **生成されるアイコン:**
-- `icons/icon16.png` (16x16px) - 拡張機能のファビコン
-- `icons/icon19.png` (19x19px) - ツールバーアイコン（旧版対応）
-- `icons/icon32.png` (32x32px) - Windows等での表示
-- `icons/icon38.png` (38x38px) - ツールバーアイコン（高解像度）
-- `icons/icon48.png` (48x48px) - 拡張機能管理ページ
-- `icons/icon128.png` (128x128px) - Chrome Web Store表示
+- `public/icon/16.png` (16x16px) - ファビコン・ツールバー
+- `public/icon/32.png` (32x32px) - Windows等での表示
+- `public/icon/48.png` (48x48px) - 拡張機能管理ページ
+- `public/icon/128.png` (128x128px) - Chrome Web Store表示
+
+`public/icon/` のアイコンは WXT がビルド時に自動検出し、manifest の `icons` に設定します。
 
 **推奨事項:**
 - 正方形の画像を使用
@@ -73,23 +79,11 @@ brew install imagemagick
 
 ### 2. Chrome Web Store用パッケージ作成
 
-拡張機能をChrome Web Storeに公開するためのZIPファイルを作成します。
-
 ```bash
-./script/build-chrome-extension.sh
+npm run zip
 ```
 
-**パッケージに含まれるファイル:**
-- `manifest.json` (必須)
-- `content-script.js` (必須)
-- `styles.css` (必須)
-- `icons/` ディレクトリ
-- `lib/` ディレクトリ (存在する場合)
-
-**自動除外されるファイル:**
-- `.DS_Store`
-- `.gitkeep`
-- 隠しファイル
+`.output/{name}-{version}-chrome.zip` が作成されます（`name` / `version` は `package.json` の値）。
 
 ### 3. スクリーンショット画像のリサイズ
 
@@ -124,61 +118,62 @@ Chrome Web Store用のスクリーンショット画像を1280x800サイズに�
 .
 ├── README.md                    # プロジェクト概要
 ├── .gitignore                   # Git除外設定
-├── manifest.json                # Chrome拡張機能設定（編集して使用）
-├── content-script.js            # コンテンツスクリプト（編集して使用）
-├── styles.css                   # スタイルシート（編集して使用）
-├── icons/                       # アイコンファイル格納
-│   └── .gitkeep
+├── package.json                 # 拡張機能名・バージョン・npmスクリプト
+├── wxt.config.ts                # WXT設定（manifest の name / permissions 等）
+├── tsconfig.json                # TypeScript設定
+├── entrypoints/                 # エントリーポイント（manifest に自動反映）
+│   └── content/
+│       ├── index.ts             # コンテンツスクリプト（編集して使用）
+│       └── style.css            # スタイルシート（編集して使用）
+├── public/
+│   └── icon/                    # アイコン格納
 ├── screenshot/                  # スクリーンショット格納
-│   └── .gitkeep
-├── lib/                         # ライブラリファイル（オプション）
-└── script/                      # ビルドスクリプト
-    ├── build-chrome-extension.sh
+└── script/                      # アセット用スクリプト
     ├── generate-icons.sh
     └── resize-to-1280x800.sh
 ```
+
+background / popup / options などが必要な場合は `entrypoints/` にファイルを追加すると manifest に自動で反映されます（[エントリーポイントの一覧](https://wxt.dev/guide/essentials/entrypoints.html)）。
 
 ## 🔄 開発ワークフロー
 
 ### 1. 初期設定
 ```bash
-# プロジェクトをクローン
 git clone <repository-url>
-cd develop-chrome-extension
-
-# 必要な依存関係をインストール
-brew install imagemagick
+cd <repository-name>
+npm install
 ```
 
 ### 2. 拡張機能の開発
 ```bash
-# 1. manifest.jsonを作成
-# 2. content-script.js, styles.cssを実装
-# 3. アイコンを生成
-./script/generate-icons.sh your-icon.png
+# 1. package.json / wxt.config.ts を編集
+# 2. entrypoints/content/index.ts, style.css を実装
+# 3. 開発サーバーで動作確認（Chromeが起動し、変更がホットリロードされる）
+npm run dev
 ```
 
 ### 3. テストとデバッグ
 ```bash
-# Chrome拡張機能として読み込んでテスト
-# chrome://extensions/ で「デベロッパーモード」を有効にして読み込み
+npm run compile   # 型チェック
+npm run build     # .output/chrome-mv3/ にビルド
 ```
+ブラウザの自動起動を使わない場合は、`chrome://extensions/` で「デベロッパーモード」を有効にし、`.output/chrome-mv3/` を「パッケージ化されていない拡張機能を読み込む」で読み込みます。
 
-### 4. スクリーンショット準備
+### 4. アセット準備
 ```bash
-# スクリーンショットを撮影後、サイズ調整
+./script/generate-icons.sh your-icon.png
 ./script/resize-to-1280x800.sh screenshot.png
 ```
 
 ### 5. パッケージング
 ```bash
-# Chrome Web Store用ZIPファイルを作成
-./script/build-chrome-extension.sh
+npm version patch   # バージョンアップ時
+npm run zip
 ```
 
 ### 6. 公開
 - [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole/) にアクセス
-- 生成されたZIPファイルをアップロード
+- `.output/` に生成されたZIPファイルをアップロード
 
 ## 🔧 トラブルシューティング
 
@@ -193,41 +188,47 @@ A: ImageMagickがインストールされていません。`brew install imagema
 **Q: アイコンが歪んで見える**
 A: 元画像が正方形でない可能性があります。正方形の画像を使用してください。
 
-**Q: ZIPファイル作成時に`manifest.json not found`エラー**
-A: プロジェクトルートに`manifest.json`ファイルが必要です。Chrome拡張機能の設定ファイルを作成してください。
+**Q: `defineContentScript` などの型が見つからないエラーが出る**
+A: `.wxt/` の型定義が未生成です。`npm install`（または `npx wxt prepare`）を実行してください。
+
+**Q: `npm run dev` でブラウザが起動しない**
+A: Chrome が見つからない環境では、`npm run build` 後に `.output/chrome-mv3/` を手動で読み込んでください。Chrome のパス指定などは [WXT のドキュメント](https://wxt.dev/guide/essentials/config/browser-startup.html) を参照してください。
 
 ### ログの確認
 
-各スクリプトは詳細なログを出力します：
+アセット用スクリプトは詳細なログを出力します：
 - 🔵 `[INFO]`: 情報メッセージ
 - 🟢 `[SUCCESS]`: 成功メッセージ  
 - 🟡 `[WARNING]`: 警告メッセージ
 - 🔴 `[ERROR]`: エラーメッセージ
 
-## 📝 manifest.json の例
+## 📝 wxt.config.ts の例
 
-```json
-{
-  "manifest_version": 3,
-  "name": "Your Extension Name",
-  "version": "1.0.0",
-  "description": "Your extension description",
-  "icons": {
-    "16": "icons/icon16.png",
-    "19": "icons/icon19.png",
-    "32": "icons/icon32.png",
-    "38": "icons/icon38.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
+`manifest.json` は WXT が生成します。`version` と `description` は `package.json` から、アイコンは `public/icon/` から、コンテンツスクリプトは `entrypoints/` から自動で設定されます。
+
+```ts
+import { defineConfig } from 'wxt';
+
+export default defineConfig({
+  manifest: {
+    name: 'Your Extension Name',
+    permissions: ['storage'],
+    host_permissions: ['https://example.com/*'],
   },
-  "content_scripts": [
-    {
-      "matches": ["https://example.com/*"],
-      "js": ["content-script.js"],
-      "css": ["styles.css"]
-    }
-  ]
-}
+});
+```
+
+```ts
+// entrypoints/content/index.ts
+import './style.css';
+
+export default defineContentScript({
+  matches: ['https://example.com/*'],
+  runAt: 'document_end',
+  main(ctx) {
+    // メインロジック
+  },
+});
 ```
 
 ## 🤝 貢献

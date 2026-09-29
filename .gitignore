@@ -6,6 +6,14 @@
 # Dependencies
 node_modules/
 
+# WXT
+.output/
+.wxt/
+web-ext.config.ts
+
+# Logs
+*.log
+
 # IDE and editor files
 .vscode/
 .idea/
