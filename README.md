@@ -192,7 +192,7 @@ A: 元画像が正方形でない可能性があります。正方形の画像�
 A: `.wxt/` の型定義が未生成です。`npm install`（または `npx wxt prepare`）を実行してください。
 
 **Q: `npm run dev` でブラウザが起動しない**
-A: Chrome が見つからない環境では、`npm run build` 後に `.output/chrome-mv3/` を手動で読み込んでください。Chrome のパス指定などは [WXT のドキュメント](https://wxt.dev/guide/essentials/config/browser-startup.html) を参照してください。
+A: ブラウザの自動起動には `web-ext`（devDependencies に含む）が必要です。`Load ".output/chrome-mv3-dev" as an unpacked extension manually` と表示される場合は `npm install` で `web-ext` が入っているか確認してください。Chrome が見つからない環境では、`npm run build` 後に `.output/chrome-mv3/` を手動で読み込んでください。Chrome のパス指定などは [WXT のドキュメント](https://wxt.dev/guide/essentials/config/browser-startup.html) を参照してください。
 
 ### ログの確認
 
